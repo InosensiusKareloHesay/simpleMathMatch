@@ -49,6 +49,10 @@ export default function MathPairsApp() {
   const [leaderboardList, setLeaderboardList] = useState([]);
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
 
+  // Custom Confirmation Modals State
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showExitGameModal, setShowExitGameModal] = useState(false);
+
   // Ref untuk timer interval
   const timerRef = useRef(null);
 
@@ -173,13 +177,16 @@ export default function MathPairsApp() {
   };
 
   // Fungsi Logout
-  const handleLogout = () => {
-    if (confirm('Apakah kamu yakin ingin keluar (logout)?')) {
-      localStorage.removeItem(LOCAL_STORAGE_PLAYER);
-      setPlayer({ id: '', name: '', unlockedLevel: 1, scores: {} });
-      setScreen('login');
-      setLoginError('');
-    }
+  const openLogoutModal = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem(LOCAL_STORAGE_PLAYER);
+    setPlayer({ id: '', name: '', unlockedLevel: 1, scores: {} });
+    setShowLogoutModal(false);
+    setScreen('login');
+    setLoginError('');
   };
 
   // Mulai Permainan Level
@@ -407,8 +414,8 @@ export default function MathPairsApp() {
 
               {/* Logout Button */}
               <button
-                onClick={handleLogout}
-                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs px-3 py-1.5 rounded-full flex items-center gap-1 transition"
+                onClick={openLogoutModal}
+                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs px-3 py-1.5 rounded-full flex items-center gap-1 transition shadow-sm"
                 title="Keluar dari akun"
               >
                 <span>Keluar</span>
@@ -647,9 +654,7 @@ export default function MathPairsApp() {
                 </div>
               </div>
               <button
-                onClick={() => {
-                  if (confirm('Keluar dari ronde permainan ini?')) setScreen('levels');
-                }}
+                onClick={() => setShowExitGameModal(true)}
                 className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs px-3 py-1.5 rounded-lg transition"
               >
                 Keluar
@@ -865,7 +870,7 @@ export default function MathPairsApp() {
                 </div>
 
                 <button
-                  onClick={handleLogout}
+                  onClick={openLogoutModal}
                   className="bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs px-4 py-2 rounded-xl border border-red-200 transition"
                 >
                   Keluar dari Akun 🚪
@@ -1035,6 +1040,75 @@ export default function MathPairsApp() {
                     Level Selanjutnya →
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= MODAL KONFIRMASI LOGOUT ================= */}
+        {showLogoutModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-red-100 animate-popIn">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-red-100 shadow-sm">
+                🚪
+              </div>
+
+              <h3 className="text-xl font-black text-slate-800 mb-1">Konfirmasi Keluar</h3>
+              <p className="text-slate-500 text-xs leading-relaxed mb-6">
+                Apakah kamu yakin ingin keluar, <strong className="text-slate-700">{player.name}</strong>? Seluruh progres level dan skormu tersimpan aman di database.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutModal(false)}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl text-sm transition"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmLogout}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-extrabold py-3 px-4 rounded-xl text-sm shadow-md shadow-red-200 transition transform active:scale-95"
+                >
+                  Ya, Keluar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= MODAL KONFIRMASI KELUAR RONDE GAME ================= */}
+        {showExitGameModal && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-indigo-100 animate-popIn">
+              <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 border border-amber-100 shadow-sm">
+                ⏸️
+              </div>
+
+              <h3 className="text-xl font-black text-slate-800 mb-1">Keluar Ronde Permainan?</h3>
+              <p className="text-slate-500 text-xs leading-relaxed mb-6">
+                Progres permainan ronde Level {currentLevel} saat ini belum selesai dan tidak akan dicatat ke rekor.
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowExitGameModal(false)}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl text-sm transition"
+                >
+                  Lanjut Main
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowExitGameModal(false);
+                    setScreen('levels');
+                  }}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 px-4 rounded-xl text-sm shadow-md transition"
+                >
+                  Keluar ke Menu
+                </button>
               </div>
             </div>
           </div>
