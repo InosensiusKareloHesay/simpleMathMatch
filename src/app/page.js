@@ -6,27 +6,21 @@ import { LEVEL_CONFIGS, generateCardsForLevel, calculateScore } from '../lib/lev
 import { sounds } from '../lib/audio';
 import {
   isSupabaseConfigured,
-  syncPlayerToSupabase,
+  authenticatePlayerInSupabase,
   saveLevelScoreToSupabase,
   fetchLeaderboardFromSupabase,
   fetchPlayerScoresFromSupabase
 } from '../lib/supabase';
 
-const LOCAL_STORAGE_PLAYER = 'mathpairs_player_v2';
-const DEFAULT_LEADERBOARD = [
-  { id: 'bot_1', name: 'Nadia Putri', totalScore: 8500, totalMoves: 120, totalTime: 420 },
-  { id: 'bot_2', name: 'Andi Pratama', totalScore: 7800, totalMoves: 135, totalTime: 490 },
-  { id: 'bot_3', name: 'Budi Santoso', totalScore: 7200, totalMoves: 148, totalTime: 540 },
-  { id: 'bot_4', name: 'Citra Amelia', totalScore: 6500, totalMoves: 160, totalTime: 620 },
-  { id: 'bot_5', name: 'Doni Saputra', totalScore: 5900, totalMoves: 175, totalTime: 680 }
-];
+const LOCAL_STORAGE_PLAYER = 'mathpairs_player_v4';
 
 export default function MathPairsApp() {
   // Navigation & Player State
   const [screen, setScreen] = useState('login'); // 'login' | 'dashboard' | 'levels' | 'game' | 'leaderboard' | 'profile' | 'how-to-play'
   const [player, setPlayer] = useState({ id: '', name: '', unlockedLevel: 1, scores: {} });
   const [supabaseConnected, setSupabaseConnected] = useState(false);
-  const [syncLoading, setSyncLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState('');
+  const [loginError, setLoginError] = useState('');
 
   // Gameplay State
   const [currentLevel, setCurrentLevel] = useState(1);
@@ -50,8 +44,10 @@ export default function MathPairsApp() {
     unlockedNext: false
   });
 
-  // Leaderboard Data State
-  const [leaderboardList, setLeaderboardList] = useState(DEFAULT_LEADERBOARD);
+  // Leaderboard Data State (DIPISAH SESUAI LEVEL)
+  const [leaderboardTab, setLeaderboardTab] = useState('all'); // 'all' | 1 | 2 | ... | 10
+  const [leaderboardList, setLeaderboardList] = useState([]);
+  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
 
   // Ref untuk timer interval
   const timerRef = useRef(null);
@@ -61,17 +57,19 @@ export default function MathPairsApp() {
     const isConfigured = isSupabaseConfigured();
     setSupabaseConnected(isConfigured);
 
-    // Ambil data lokal
+    // Ambil data sesi lokal
     const localData = localStorage.getItem(LOCAL_STORAGE_PLAYER);
     if (localData) {
       try {
         const parsed = JSON.parse(localData);
-        setPlayer(parsed);
-        setScreen('dashboard');
+        if (parsed.name && parsed.id) {
+          setPlayer(parsed);
+          setScreen('dashboard');
 
-        // Jika Supabase aktif, sync data
-        if (isConfigured && parsed.id) {
-          syncWithSupabase(parsed);
+          // Sinkronisasi data progres terbaru jika Supabase aktif
+          if (isConfigured) {
+            refreshOnlineData(parsed);
+          }
         }
       } catch (e) {
         console.error(e);
@@ -91,49 +89,96 @@ export default function MathPairsApp() {
     return () => clearInterval(timerRef.current);
   }, [isTimerRunning]);
 
-  // Sync player dengan Supabase
-  const syncWithSupabase = async (activePlayer) => {
-    if (!isSupabaseConfigured() || !activePlayer?.id) return;
-    setSyncLoading(true);
+  // Refresh skor & level terbuka dari Supabase
+  const refreshOnlineData = async (activePlayer) => {
     try {
-      await syncPlayerToSupabase(activePlayer);
-      const onlineScores = await fetchPlayerScoresFromSupabase(activePlayer.id);
-      if (onlineScores) {
+      const online = await fetchPlayerScoresFromSupabase(activePlayer.id);
+      if (online) {
         const merged = {
           ...activePlayer,
-          scores: { ...activePlayer.scores, ...onlineScores.scores },
-          unlockedLevel: Math.max(activePlayer.unlockedLevel, onlineScores.maxLevelUnlocked)
+          scores: { ...activePlayer.scores, ...online.scores },
+          unlockedLevel: Math.max(activePlayer.unlockedLevel, online.maxLevelUnlocked)
         };
         setPlayer(merged);
         localStorage.setItem(LOCAL_STORAGE_PLAYER, JSON.stringify(merged));
       }
     } catch (err) {
-      console.warn('Sync error:', err);
-    } finally {
-      setSyncLoading(false);
+      console.warn('Sync warning:', err);
     }
   };
 
-  // Login Form Submit
-  const handleLogin = async (e) => {
+  // Login / Registrasi Pemain dengan Password
+  const handleAuth = async (e) => {
     e.preventDefault();
+    setLoginError('');
     const nameInput = e.target.playerName.value.trim();
-    if (!nameInput) return;
+    const passInput = e.target.playerPassword.value.trim();
+
+    if (!nameInput) {
+      setLoginError('Nama pemain harus diisi.');
+      return;
+    }
+
+    if (!passInput) {
+      setLoginError('Password harus diisi untuk mengamankan akunmu.');
+      return;
+    }
 
     sounds.init();
-    const newPlayer = {
-      id: 'usr_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
-      name: nameInput,
-      unlockedLevel: 1,
-      scores: {}
-    };
-
-    setPlayer(newPlayer);
-    localStorage.setItem(LOCAL_STORAGE_PLAYER, JSON.stringify(newPlayer));
-    setScreen('dashboard');
+    setLoadingText('Memverifikasi akun...');
 
     if (isSupabaseConfigured()) {
-      syncWithSupabase(newPlayer);
+      const authRes = await authenticatePlayerInSupabase(nameInput, passInput);
+      if (!authRes.success) {
+        setLoginError(authRes.error || 'Gagal masuk. Periksa password Anda.');
+        setLoadingText('');
+        return;
+      }
+
+      const dbPlayer = authRes.player;
+      let activeScores = {};
+      let maxUnlocked = 1;
+
+      // Ambil progres permainan yang sudah pernah diselesaikan
+      const online = await fetchPlayerScoresFromSupabase(dbPlayer.id);
+      if (online) {
+        activeScores = online.scores;
+        maxUnlocked = online.maxLevelUnlocked;
+      }
+
+      const activePlayer = {
+        id: dbPlayer.id,
+        name: dbPlayer.display_name,
+        unlockedLevel: maxUnlocked,
+        scores: activeScores
+      };
+
+      setPlayer(activePlayer);
+      localStorage.setItem(LOCAL_STORAGE_PLAYER, JSON.stringify(activePlayer));
+      setLoadingText('');
+      setScreen('dashboard');
+    } else {
+      // Offline fallback
+      const activePlayer = {
+        id: 'local_' + Date.now().toString(36),
+        name: nameInput,
+        unlockedLevel: 1,
+        scores: {}
+      };
+      setPlayer(activePlayer);
+      localStorage.setItem(LOCAL_STORAGE_PLAYER, JSON.stringify(activePlayer));
+      setLoadingText('');
+      setScreen('dashboard');
+    }
+  };
+
+  // Fungsi Logout
+  const handleLogout = () => {
+    if (confirm('Apakah kamu yakin ingin keluar (logout)?')) {
+      localStorage.removeItem(LOCAL_STORAGE_PLAYER);
+      setPlayer({ id: '', name: '', unlockedLevel: 1, scores: {} });
+      setScreen('login');
+      setLoginError('');
     }
   };
 
@@ -160,7 +205,6 @@ export default function MathPairsApp() {
     if (matchedCardIds.has(card.id)) return;
     if (flippedCards.some(c => c.id === card.id)) return;
 
-    // Mulai timer jika belum jalan
     if (!isTimerRunning) {
       setIsTimerRunning(true);
     }
@@ -193,7 +237,7 @@ export default function MathPairsApp() {
         // Cek Selesai Level
         const config = LEVEL_CONFIGS[currentLevel];
         if (nextMatched.size >= config.cards) {
-          handleLevelComplete(nextMatched.size);
+          handleLevelComplete();
         }
       }, 400);
     } else {
@@ -254,9 +298,9 @@ export default function MathPairsApp() {
     setPlayer(updatedPlayer);
     localStorage.setItem(LOCAL_STORAGE_PLAYER, JSON.stringify(updatedPlayer));
 
-    // Sync Skor ke Supabase
-    if (isSupabaseConfigured()) {
-      saveLevelScoreToSupabase(player.id, currentLevel, stats.score, moves + 1, timerSeconds, stats.stars);
+    // Simpan ke Supabase (tabel player_level_scores & game_sessions)
+    if (isSupabaseConfigured() && player.id) {
+      saveLevelScoreToSupabase(player.id, currentLevel, stats.score, moves + 1, timerSeconds);
     }
 
     setResultModal({
@@ -270,38 +314,63 @@ export default function MathPairsApp() {
     });
   };
 
-  // Buka Halaman Leaderboard
-  const openLeaderboard = async () => {
-    setScreen('leaderboard');
+  // Load Leaderboard berdasarkan tab level yang dipilih
+  const loadLeaderboardData = async (lvl) => {
+    setIsLeaderboardLoading(true);
+
     if (isSupabaseConfigured()) {
-      const onlineList = await fetchLeaderboardFromSupabase();
-      if (onlineList && onlineList.length > 0) {
-        setLeaderboardList(onlineList);
-        return;
+      const realData = await fetchLeaderboardFromSupabase(lvl);
+      setLeaderboardList(realData || []);
+    } else {
+      // Offline fallback
+      if (lvl === 'all') {
+        const myTotalScore = Object.values(player.scores).reduce((sum, item) => sum + (item.score || 0), 0);
+        const myTotalMoves = Object.values(player.scores).reduce((sum, item) => sum + (item.moves || 0), 0);
+        const myTotalTime = Object.values(player.scores).reduce((sum, item) => sum + (item.time || 0), 0);
+
+        if (myTotalScore > 0 && player.name) {
+          setLeaderboardList([{
+            id: player.id,
+            name: player.name,
+            totalScore: myTotalScore,
+            totalMoves: myTotalMoves,
+            totalTime: myTotalTime,
+            completedLevels: Object.keys(player.scores).length
+          }]);
+        } else {
+          setLeaderboardList([]);
+        }
+      } else {
+        const lvlData = player.scores[lvl];
+        if (lvlData && player.name) {
+          setLeaderboardList([{
+            id: player.id,
+            name: player.name,
+            score: lvlData.score,
+            moves: lvlData.moves,
+            time: lvlData.time,
+            levelNumber: lvl
+          }]);
+        } else {
+          setLeaderboardList([]);
+        }
       }
     }
 
-    // Fallback: Gabungkan player lokal dengan bot mock
-    const myTotalScore = Object.values(player.scores).reduce((sum, item) => sum + (item.score || 0), 0);
-    const myTotalMoves = Object.values(player.scores).reduce((sum, item) => sum + (item.moves || 0), 0);
-    const myTotalTime = Object.values(player.scores).reduce((sum, item) => sum + (item.time || 0), 0);
+    setIsLeaderboardLoading(false);
+  };
 
-    const merged = [...DEFAULT_LEADERBOARD];
-    if (player.name) {
-      const idx = merged.findIndex(i => i.id === player.id);
-      const userEntry = {
-        id: player.id,
-        name: player.name,
-        totalScore: myTotalScore,
-        totalMoves: myTotalMoves,
-        totalTime: myTotalTime,
-        isUser: true
-      };
-      if (idx !== -1) merged[idx] = userEntry;
-      else merged.push(userEntry);
-    }
-    merged.sort((a, b) => b.totalScore - a.totalScore);
-    setLeaderboardList(merged);
+  // Buka Halaman Leaderboard
+  const openLeaderboard = async () => {
+    setScreen('leaderboard');
+    setLeaderboardTab('all');
+    loadLeaderboardData('all');
+  };
+
+  // Switch tab level pada leaderboard
+  const switchLeaderboardTab = (tab) => {
+    setLeaderboardTab(tab);
+    loadLeaderboardData(tab);
   };
 
   // Helper Total Skor Player
@@ -317,24 +386,34 @@ export default function MathPairsApp() {
           <header className="flex justify-between items-center bg-white/90 backdrop-blur-md px-5 py-3 rounded-2xl shadow-sm mb-4 border border-indigo-100">
             <div className="flex items-center gap-2 cursor-pointer font-bold text-indigo-700 text-xl" onClick={() => setScreen('dashboard')}>
               <span>🧠 MathPairs</span>
-              <span className="bg-indigo-600 text-white text-xs px-2.5 py-0.5 rounded-full font-extrabold">Kelas 6 SD</span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Supabase Status Indicator */}
               <div className={`text-xs px-2.5 py-1 rounded-full font-semibold flex items-center gap-1.5 ${
                 supabaseConnected ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
               }`}>
                 <span className={`w-2 h-2 rounded-full ${supabaseConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                {supabaseConnected ? 'Supabase Online' : 'Mode Offline (Lokal)'}
+                <span className="hidden sm:inline">{supabaseConnected ? 'Mode Online' : 'Mode Offline'}</span>
               </div>
 
+              {/* User Profile Pill */}
               <div
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm px-3.5 py-1.5 rounded-full cursor-pointer flex items-center gap-1 transition"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm px-3 py-1.5 rounded-full cursor-pointer flex items-center gap-1 transition"
                 onClick={() => setScreen('profile')}
               >
                 👤 {player.name || 'Pemain'}
               </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs px-3 py-1.5 rounded-full flex items-center gap-1 transition"
+                title="Keluar dari akun"
+              >
+                <span>Keluar</span>
+                <span>🚪</span>
+              </button>
             </div>
           </header>
         )}
@@ -346,29 +425,51 @@ export default function MathPairsApp() {
             <h1 className="text-3xl font-extrabold text-indigo-600 mb-1">MathPairs</h1>
             <p className="text-slate-500 text-sm mb-6">Learn · Play · Match<br />Media Pembelajaran Interaktif Matematika</p>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            {loginError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-semibold p-3 rounded-xl mb-4 text-left">
+                ⚠️ {loginError}
+              </div>
+            )}
+
+            <form onSubmit={handleAuth} className="space-y-4">
               <div className="text-left">
-                <label className="block text-slate-700 font-bold text-sm mb-1">Siapa nama panggilanmu?</label>
+                <label className="block text-slate-700 font-bold text-xs mb-1 uppercase tracking-wider">Nama Siswa / Username</label>
                 <input
                   type="text"
                   name="playerName"
-                  placeholder="Contoh: Andi Pratama"
+                  placeholder="Masukkan nama panggilanmu..."
                   required
                   maxLength={25}
-                  className="w-full text-center px-4 py-3 text-lg font-bold border-2 border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none transition"
+                  className="w-full px-4 py-3 text-base font-bold border-2 border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none transition"
                 />
               </div>
+
+              <div className="text-left">
+                <label className="block text-slate-700 font-bold text-xs mb-1 uppercase tracking-wider">Password / PIN</label>
+                <input
+                  type="password"
+                  name="playerPassword"
+                  placeholder="Masukkan password akun..."
+                  required
+                  className="w-full px-4 py-3 text-base font-bold border-2 border-slate-200 rounded-xl focus:border-indigo-600 focus:outline-none transition"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  *Jika akun baru, password ini akan didaftarkan sebagai kunci login kamu.
+                </p>
+              </div>
+
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-300 transition transform active:scale-95"
+                disabled={Boolean(loadingText)}
+                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-300 transition transform active:scale-95 disabled:opacity-50 mt-2"
               >
-                Mulai Petualangan Belajar 🚀
+                {loadingText || 'Masuk & Mulai Bermain 🚀'}
               </button>
             </form>
 
             <div className="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-400">
               {supabaseConnected ? (
-                <span className="text-emerald-600 font-medium">✓ Terhubung ke database Supabase Cloud</span>
+                <span className="text-emerald-600 font-medium">✓ Terhubung ke Database Supabase</span>
               ) : (
                 <span>Mode Offline: Skor disimpan di browser</span>
               )}
@@ -420,7 +521,7 @@ export default function MathPairsApp() {
                 <div>
                   <div className="text-4xl mb-3 group-hover:scale-110 transition transform origin-left">🏆</div>
                   <h3 className="text-lg font-bold text-slate-800">Papan Peringkat</h3>
-                  <p className="text-xs text-slate-500 mt-1">Lihat peringkat skor terbaik dari seluruh teman sekelas.</p>
+                  <p className="text-xs text-slate-500 mt-1">Lihat peringkat skor terbaik per level atau total akumulasi.</p>
                 </div>
                 <span className="text-indigo-600 font-extrabold text-sm mt-4 flex items-center gap-1">Lihat Peringkat →</span>
               </div>
@@ -602,13 +703,13 @@ export default function MathPairsApp() {
           </div>
         )}
 
-        {/* ================= 5. LEADERBOARD SCREEN ================= */}
+        {/* ================= 5. LEADERBOARD SCREEN (PER LEVEL & REAL DATA ONLY) ================= */}
         {screen === 'leaderboard' && (
           <div className="space-y-4 animate-fadeIn">
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-black text-indigo-700">🏆 Papan Peringkat</h2>
-                <p className="text-slate-500 text-xs">Akumulasi skor terbaik seluruh level</p>
+                <p className="text-slate-500 text-xs">Peringkat resmi berdasarkan data asli di database Supabase</p>
               </div>
               <button
                 onClick={() => setScreen('dashboard')}
@@ -618,6 +719,35 @@ export default function MathPairsApp() {
               </button>
             </div>
 
+            {/* Level Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+              <button
+                onClick={() => switchLeaderboardTab('all')}
+                className={`px-3.5 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition ${
+                  leaderboardTab === 'all'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                🌟 Total Akumulasi
+              </button>
+
+              {Array.from({ length: 10 }, (_, i) => i + 1).map(lvl => (
+                <button
+                  key={lvl}
+                  onClick={() => switchLeaderboardTab(lvl)}
+                  className={`px-3.5 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition ${
+                    leaderboardTab === lvl
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  Level {lvl}
+                </button>
+              ))}
+            </div>
+
+            {/* Table Container */}
             <div className="bg-white rounded-2xl shadow-sm border border-indigo-50 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
@@ -625,32 +755,80 @@ export default function MathPairsApp() {
                     <tr>
                       <th className="py-3 px-4">Peringkat</th>
                       <th className="py-3 px-4">Nama Siswa</th>
-                      <th className="py-3 px-4">Total Poin</th>
-                      <th className="py-3 px-4">Total Move</th>
-                      <th className="py-3 px-4">Total Waktu</th>
+                      <th className="py-3 px-4">
+                        {leaderboardTab === 'all' ? 'Total Poin' : `Skor Level ${leaderboardTab}`}
+                      </th>
+                      <th className="py-3 px-4">
+                        {leaderboardTab === 'all' ? 'Total Move' : 'Percobaan (Move)'}
+                      </th>
+                      <th className="py-3 px-4">
+                        {leaderboardTab === 'all' ? 'Total Waktu' : 'Waktu'}
+                      </th>
+                      {leaderboardTab === 'all' && (
+                        <th className="py-3 px-4">Level Selesai</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {leaderboardList.map((row, idx) => {
-                      const isMe = row.id === player.id;
-                      const mins = String(Math.floor((row.totalTime || 0) / 60)).padStart(2, '0');
-                      const secs = String((row.totalTime || 0) % 60).padStart(2, '0');
+                    {isLeaderboardLoading ? (
+                      <tr>
+                        <td colSpan={leaderboardTab === 'all' ? 6 : 5} className="py-8 text-center text-slate-400">
+                          Memuat data peringkat terbaru...
+                        </td>
+                      </tr>
+                    ) : leaderboardList.length === 0 ? (
+                      <tr>
+                        <td colSpan={leaderboardTab === 'all' ? 6 : 5} className="py-12 text-center text-slate-400">
+                          <div className="text-4xl mb-2">🏆</div>
+                          <div className="font-bold text-slate-700 text-base">
+                            {leaderboardTab === 'all'
+                              ? 'Belum Ada Skor Tercatat'
+                              : `Belum Ada Skor di Level ${leaderboardTab}`}
+                          </div>
+                          <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                            {leaderboardTab === 'all'
+                              ? 'Belum ada siswa yang menyelesaikan level. Selesaikan level sekarang untuk memimpin peringkat!'
+                              : `Jadilah siswa pertama yang menaklukkan tantangan Level ${leaderboardTab}!`}
+                          </p>
+                          <button
+                            onClick={() => startLevel(leaderboardTab === 'all' ? 1 : leaderboardTab)}
+                            className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition"
+                          >
+                            Mainkan {leaderboardTab === 'all' ? 'Level 1' : `Level ${leaderboardTab}`} Sekarang 🚀
+                          </button>
+                        </td>
+                      </tr>
+                    ) : (
+                      leaderboardList.map((row, idx) => {
+                        const isMe = row.id === player.id;
+                        const scoreVal = leaderboardTab === 'all' ? row.totalScore : row.score;
+                        const movesVal = leaderboardTab === 'all' ? row.totalMoves : row.moves;
+                        const rawTime = leaderboardTab === 'all' ? row.totalTime : row.time;
 
-                      return (
-                        <tr key={row.id || idx} className={isMe ? 'bg-indigo-50/70 font-bold text-indigo-900' : 'hover:bg-slate-50'}>
-                          <td className="py-3 px-4">
-                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`}
-                          </td>
-                          <td className="py-3 px-4 flex items-center gap-1.5">
-                            <span>{row.name}</span>
-                            {isMe && <span className="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Kamu</span>}
-                          </td>
-                          <td className="py-3 px-4 font-black text-indigo-600">{(row.totalScore || 0).toLocaleString()}</td>
-                          <td className="py-3 px-4 text-slate-600">{row.totalMoves || 0}</td>
-                          <td className="py-3 px-4 text-slate-600">{mins}:{secs}</td>
-                        </tr>
-                      );
-                    })}
+                        const mins = String(Math.floor((rawTime || 0) / 60)).padStart(2, '0');
+                        const secs = String((rawTime || 0) % 60).padStart(2, '0');
+
+                        return (
+                          <tr key={row.id || idx} className={isMe ? 'bg-indigo-50/70 font-bold text-indigo-900' : 'hover:bg-slate-50'}>
+                            <td className="py-3 px-4">
+                              {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`}
+                            </td>
+                            <td className="py-3 px-4 flex items-center gap-1.5">
+                              <span>{row.name}</span>
+                              {isMe && <span className="bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">Kamu</span>}
+                            </td>
+                            <td className="py-3 px-4 font-black text-indigo-600">{(scoreVal || 0).toLocaleString()}</td>
+                            <td className="py-3 px-4 text-slate-600">{movesVal || 0}</td>
+                            <td className="py-3 px-4 text-slate-600">{mins}:{secs}</td>
+                            {leaderboardTab === 'all' && (
+                              <td className="py-3 px-4 text-slate-600 font-bold">
+                                {row.completedLevels || 0} / 10
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -675,14 +853,23 @@ export default function MathPairsApp() {
             </div>
 
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-indigo-100 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-3xl text-white shadow-md">
-                  🎓
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-3xl text-white shadow-md">
+                    🎓
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-extrabold text-slate-800">{player.name}</h3>
+                    <div className="text-xs text-slate-400 font-mono">ID: {player.id}</div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-2xl font-extrabold text-slate-800">{player.name}</h3>
-                  <div className="text-xs text-slate-400">ID: {player.id}</div>
-                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs px-4 py-2 rounded-xl border border-red-200 transition"
+                >
+                  Keluar dari Akun 🚪
+                </button>
               </div>
 
               {/* Stat Cards */}
@@ -702,7 +889,7 @@ export default function MathPairsApp() {
                 <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
                   <div className="text-xs font-bold text-slate-400 uppercase">Database</div>
                   <div className="text-sm font-bold text-slate-700 mt-2">
-                    {supabaseConnected ? '🟢 Supabase' : '🟡 Browser'}
+                    {supabaseConnected ? '🟢 Supabase' : '🟡 Offline'}
                   </div>
                 </div>
               </div>
@@ -737,21 +924,6 @@ export default function MathPairsApp() {
                     );
                   })}
                 </div>
-              </div>
-
-              {/* Reset Data */}
-              <div className="pt-4 border-t border-slate-100 text-right">
-                <button
-                  onClick={() => {
-                    if (confirm('Yakin ingin mereset data game ini?')) {
-                      localStorage.removeItem(LOCAL_STORAGE_PLAYER);
-                      window.location.reload();
-                    }
-                  }}
-                  className="text-xs font-bold text-red-500 hover:text-red-700 transition"
-                >
-                  Reset Data Game
-                </button>
               </div>
             </div>
           </div>
@@ -872,4 +1044,3 @@ export default function MathPairsApp() {
     </div>
   );
 }
-

@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'MathPairs - Game Edukasi Matematika Siswa Kelas 6 SD',
+  title: 'MathPairs - Game Edukasi Matematika Siswa SD',
   description: 'Media pembelajaran matematika interaktif berbasis web dengan Supabase & Next.js',
 };
 

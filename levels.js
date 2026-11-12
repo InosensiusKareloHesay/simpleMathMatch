@@ -11,7 +11,7 @@ const LEVEL_CONFIGS = {
   7: { cards: 70, pairs: 35, ops: ['+', '-', '*', '/'], maxNum: 90, baseScore: 3000, targetTime: 210, title: "Angka Lebih Besar" },
   8: { cards: 80, pairs: 40, ops: ['+', '-', '*', '/'], maxNum: 100, baseScore: 3500, targetTime: 240, title: "Tantangan Menengah" },
   9: { cards: 90, pairs: 45, ops: ['+', '-', '*', '/'], maxNum: 120, baseScore: 4000, targetTime: 270, title: "Tantangan Tingkat Tinggi" },
-  10: { cards: 100, pairs: 50, ops: ['+', '-', '*', '/'], maxNum: 150, baseScore: 5000, targetTime: 300, title: "Master Matematika Kelas 6" }
+  10: { cards: 100, pairs: 50, ops: ['+', '-', '*', '/'], maxNum: 150, baseScore: 5000, targetTime: 300, title: "Master Matematika SD" }
 };
 
 // Fungsi helper menghasilkan operasi untuk hasil target R

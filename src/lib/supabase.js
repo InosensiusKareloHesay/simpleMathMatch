@@ -1,8 +1,15 @@
-// src/lib/supabase.js
+// src/lib/supabase.js - Disesuaikan dengan Skema Database Supabase User + Password & Real Data Only
+
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Bersihkan format URL dari trailing slash atau path /rest/v1 jika terbawa
+let rawUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim().replace(/^['"]|['"]$/g, '');
+rawUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
+
+const rawKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim().replace(/^['"]|['"]$/g, '');
+
+const supabaseUrl = rawUrl;
+const supabaseAnonKey = rawKey;
 
 export const isSupabaseConfigured = () => {
   return Boolean(
@@ -18,63 +25,98 @@ export const supabase = isSupabaseConfigured()
   : null;
 
 /**
- * Simpan / perbarui pemain di Supabase
+ * 1. Login atau Daftar Pemain Baru dengan Password
  */
-export async function syncPlayerToSupabase(player) {
-  if (!supabase || !player?.id) return null;
-  try {
-    const { data, error } = await supabase
-      .from('players')
-      .upsert({ id: player.id, name: player.name }, { onConflict: 'id' })
-      .select();
+export async function authenticatePlayerInSupabase(displayName, password) {
+  if (!supabase || !displayName) return { success: false, error: 'Database belum terhubung' };
 
-    if (error) throw error;
-    return data;
+  try {
+    const cleanName = displayName.trim();
+    const cleanPass = password ? password.trim() : '';
+
+    const { data: existing, error: fetchErr } = await supabase
+      .from('players')
+      .select('*')
+      .eq('display_name', cleanName)
+      .maybeSingle();
+
+    if (fetchErr) throw fetchErr;
+
+    if (existing) {
+      if (existing.password && existing.password !== cleanPass) {
+        return {
+          success: false,
+          error: 'Password salah untuk nama ini! Silakan periksa kembali atau gunakan nama lain.'
+        };
+      }
+
+      if (!existing.password && cleanPass) {
+        await supabase
+          .from('players')
+          .update({ password: cleanPass })
+          .eq('id', existing.id);
+      }
+
+      return { success: true, player: existing, isNew: false };
+    }
+
+    const { data: newPlayer, error: insertErr } = await supabase
+      .from('players')
+      .insert({
+        display_name: cleanName,
+        password: cleanPass
+      })
+      .select()
+      .single();
+
+    if (insertErr) throw insertErr;
+    return { success: true, player: newPlayer, isNew: true };
   } catch (err) {
-    console.warn('[Supabase] Gagal sync player:', err.message);
-    return null;
+    console.warn('[Supabase] Auth error:', err.message);
+    return { success: false, error: err.message };
   }
 }
 
 /**
- * Simpan skor level ke Supabase (upsert skor terbaik & log sesi)
+ * 2. Simpan skor level ke Supabase (tabel player_level_scores & game_sessions)
  */
-export async function saveLevelScoreToSupabase(playerId, level, score, moves, time, stars) {
+export async function saveLevelScoreToSupabase(playerId, levelNumber, score, moves, timeSeconds) {
   if (!supabase || !playerId) return null;
 
   try {
-    // 1. Cek skor terbaik yang sudah ada
-    const { data: existing } = await supabase
+    const { data: existing, error: fetchErr } = await supabase
       .from('player_level_scores')
-      .select('score')
+      .select('best_score')
       .eq('player_id', playerId)
-      .eq('level', level)
+      .eq('level_number', levelNumber)
       .maybeSingle();
 
-    // Hanya update jika skor baru lebih tinggi atau belum ada
-    if (!existing || score > existing.score) {
-      await supabase
+    if (fetchErr) throw fetchErr;
+
+    if (!existing || score > existing.best_score) {
+      const { error: upsertErr } = await supabase
         .from('player_level_scores')
         .upsert({
           player_id: playerId,
-          level: level,
-          score: score,
-          moves: moves,
-          time: time,
-          stars: stars,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'player_id,level' });
+          level_number: levelNumber,
+          best_score: score,
+          best_moves: moves,
+          best_time_seconds: timeSeconds,
+          achieved_at: new Date().toISOString()
+        }, { onConflict: 'player_id,level_number' });
+
+      if (upsertErr) throw upsertErr;
     }
 
-    // 2. Simpan juga ke riwayat sesi game
     await supabase
       .from('game_sessions')
       .insert({
         player_id: playerId,
-        level: level,
+        level_number: levelNumber,
         score: score,
         moves: moves,
-        time: time
+        time_seconds: timeSeconds,
+        completed_at: new Date().toISOString()
       });
 
     return true;
@@ -85,72 +127,99 @@ export async function saveLevelScoreToSupabase(playerId, level, score, moves, ti
 }
 
 /**
- * Ambil data leaderboard dari Supabase
+ * 3. Ambil data leaderboard berdasarkan Level atau Akumulasi Total
+ * @param {'all' | number} selectedLevel - 'all' untuk total akumulasi, atau 1..10 untuk level spesifik
  */
-export async function fetchLeaderboardFromSupabase() {
-  if (!supabase) return null;
-  try {
-    // Coba ambil dari leaderboard_view
-    const { data, error } = await supabase
-      .from('leaderboard_view')
-      .select('*')
-      .limit(50);
+export async function fetchLeaderboardFromSupabase(selectedLevel = 'all') {
+  if (!supabase) return [];
 
-    if (error) {
-      // Fallback jika view belum dibuat: hitung manual dari players & scores
-      const { data: scoresData, error: sErr } = await supabase
+  try {
+    // A. JIKA FILTER LEVEL SPESIFIK (Level 1 s/d 10)
+    if (selectedLevel && selectedLevel !== 'all') {
+      const lvlNum = parseInt(selectedLevel, 10);
+      const { data, error } = await supabase
         .from('player_level_scores')
         .select(`
           player_id,
-          score,
-          moves,
-          time,
-          players ( name )
-        `);
+          level_number,
+          best_score,
+          best_moves,
+          best_time_seconds,
+          players!inner ( id, display_name )
+        `)
+        .eq('level_number', lvlNum)
+        .order('best_score', { ascending: false })
+        .order('best_moves', { ascending: true })
+        .order('best_time_seconds', { ascending: true });
 
-      if (sErr) throw sErr;
+      if (error) throw error;
 
-      // Agregasi manual
-      const map = {};
-      scoresData.forEach(item => {
-        const pid = item.player_id;
-        const pName = item.players?.name || 'Pemain';
-        if (!map[pid]) {
-          map[pid] = { id: pid, name: pName, totalScore: 0, totalMoves: 0, totalTime: 0 };
-        }
-        map[pid].totalScore += item.score || 0;
-        map[pid].totalMoves += item.moves || 0;
-        map[pid].totalTime += item.time || 0;
-      });
-
-      const list = Object.values(map);
-      list.sort((a, b) => {
-        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-        if (a.totalMoves !== b.totalMoves) return a.totalMoves - b.totalMoves;
-        return a.totalTime - b.totalTime;
-      });
-      return list;
+      return (data || []).map(row => ({
+        id: row.player_id,
+        name: row.players?.display_name || 'Pemain',
+        score: row.best_score,
+        moves: row.best_moves,
+        time: row.best_time_seconds,
+        levelNumber: row.level_number
+      }));
     }
 
-    return (data || []).map(row => ({
-      id: row.player_id,
-      name: row.player_name,
-      totalScore: row.total_score,
-      totalMoves: row.total_moves,
-      totalTime: row.total_time,
-      completedLevels: row.completed_levels
-    }));
+    // B. JIKA TOTAL AKUMULASI SELURUH LEVEL
+    const { data, error } = await supabase
+      .from('player_level_scores')
+      .select(`
+        player_id,
+        best_score,
+        best_moves,
+        best_time_seconds,
+        players!inner ( id, display_name )
+      `);
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    const playerMap = {};
+    data.forEach(row => {
+      const pid = row.player_id;
+      const pName = row.players?.display_name || 'Pemain';
+
+      if (!playerMap[pid]) {
+        playerMap[pid] = {
+          id: pid,
+          name: pName,
+          totalScore: 0,
+          totalMoves: 0,
+          totalTime: 0,
+          completedLevels: 0
+        };
+      }
+
+      playerMap[pid].totalScore += row.best_score || 0;
+      playerMap[pid].totalMoves += row.best_moves || 0;
+      playerMap[pid].totalTime += row.best_time_seconds || 0;
+      playerMap[pid].completedLevels += 1;
+    });
+
+    const list = Object.values(playerMap);
+    list.sort((a, b) => {
+      if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+      if (a.totalMoves !== b.totalMoves) return a.totalMoves - b.totalMoves;
+      return a.totalTime - b.totalTime;
+    });
+
+    return list;
   } catch (err) {
     console.warn('[Supabase] Gagal ambil leaderboard:', err.message);
-    return null;
+    return [];
   }
 }
 
 /**
- * Ambil skor pemain yang tersimpan di Supabase
+ * 4. Ambil semua skor dan level yang sudah diselesaikan pemain
  */
 export async function fetchPlayerScoresFromSupabase(playerId) {
   if (!supabase || !playerId) return null;
+
   try {
     const { data, error } = await supabase
       .from('player_level_scores')
@@ -158,18 +227,22 @@ export async function fetchPlayerScoresFromSupabase(playerId) {
       .eq('player_id', playerId);
 
     if (error) throw error;
-    
+
     const scores = {};
     let maxLevelUnlocked = 1;
+
     (data || []).forEach(row => {
-      scores[row.level] = {
-        score: row.score,
-        moves: row.moves,
-        time: row.time,
-        stars: row.stars
+      const stars = row.best_score >= 850 ? 3 : row.best_score >= 650 ? 2 : 1;
+
+      scores[row.level_number] = {
+        score: row.best_score,
+        moves: row.best_moves,
+        time: row.best_time_seconds,
+        stars: stars
       };
-      if (row.level >= maxLevelUnlocked && row.level < 10) {
-        maxLevelUnlocked = row.level + 1;
+
+      if (row.level_number >= maxLevelUnlocked && row.level_number < 10) {
+        maxLevelUnlocked = row.level_number + 1;
       }
     });
 
@@ -179,4 +252,3 @@ export async function fetchPlayerScoresFromSupabase(playerId) {
     return null;
   }
 }
-
