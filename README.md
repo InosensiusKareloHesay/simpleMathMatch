@@ -1,35 +1,47 @@
-# MathPairs - Educational Math Memory Game 🧠🎴
+# MathPairs (Next.js + Tailwind + Supabase) 🧠🎴
 
-Media pembelajaran matematika interaktif untuk siswa kelas 6 SD berbasis web. Menggabungkan konsep **Memory Card Game** dengan latihan operasi hitung matematika (+, −, ×, ÷).
-
----
-
-## 🎯 Fitur yang Telah Dibuat (Sesuai Konsep MVP)
-1. **Login Simpel**: Cukup masukkan nama panggilan tanpa repot email & password.
-2. **Dashboard Siswa**: Menampilkan nama pemain, total akumulasi poin, progres level (misal: 3/10), dan navigasi cepat.
-3. **10 Level Bertahap**:
-   - Level 1: 10 kartu (5 pasang) - Penjumlahan & pengurangan sederhana
-   - Level 2: 20 kartu (10 pasang) - Penjumlahan & pengurangan lanjutan
-   - Level 3: 30 kartu (15 pasang) - Perkalian dasar
-   - Level 4: 40 kartu (20 pasang) - Penjumlahan, pengurangan, perkalian
-   - Level 5: 50 kartu (25 pasang) - 4 operasi dasar
-   - Level 6 s/d Level 10: Hingga 100 kartu dengan variasi angka lebih besar dan tantangan tinggi
-4. **Mekanisme Anti-Ambiguitas**: Setiap pasangan kartu dalam satu sesi dipastikan memiliki hasil unik (*tidak ada kartu dengan hasil sama dari pasangan lain*).
-5. **Sistem Move & Timer**:
-   - Percobaan (move) dihitung setiap kali 2 kartu dibuka.
-   - Timer otomatis mulai ketika kartu pertama dibuka.
-6. **Sistem Skor & Bintang (⭐⭐⭐)**: Dihitung menggunakan formula efisiensi langkah dan waktu terhadap skor dasar tiap level.
-7. **Penyimpanan Skor Terbaik & Level Unlock**: Menggunakan `localStorage` browser sehingga progres tidak hilang saat halaman di-refresh.
-8. **Papan Peringkat (Leaderboard)**: Mengurutkan peringkat berdasarkan total akumulasi skor terbaik, jumlah move, dan total waktu.
-9. **Profil Siswa**: Menampilkan statistik lengkap, capaian bintang, dan riwayat skor setiap level.
-10. **Efek Audio Sintetis (Web Audio API)**: Suara flip kartu, benar (match), salah (buzzer), dan nada kemenangan saat level selesai tanpa perlu download file mp3.
-11. **Tampilan Responsif**: Nyaman dimainkan di laptop, komputer, tablet, maupun layar HP.
+Media pembelajaran matematika interaktif untuk siswa kelas 6 SD dengan integrasi database **Supabase Cloud**.
 
 ---
 
-## 🚀 Cara Menjalankan
+## 🌟 Fitur Utama
+1. **Next.js 14 (App Router) + Tailwind CSS**: Desain UI modern, responsif, dan animasi 3D flip kartu.
+2. **Integrasi Supabase Cloud**:
+   - `players`: Menyimpan identitas siswa.
+   - `player_level_scores`: Menyimpan skor tertinggi, perolehan bintang, moves, dan waktu per level.
+   - `game_sessions`: Riwayat setiap sesi permainan.
+   - `leaderboard_view`: Leaderboard otomatis yang diagregasi di database Supabase.
+3. **Smart Offline Fallback**: Jika kredensial Supabase belum diisi, game tetap dapat dimainkan menggunakan penyimpanan lokal (`localStorage`) tanpa error.
+4. **10 Level Bertahap Anti-Ambiguitas**: Menggunakan formula matematika unik per pasangan agar setiap soal tepat memiliki 1 pasangan.
+5. **Efek Audio & Confetti**: Efek suara sintetis (Web Audio API) dan ledakan confetti saat menyelesaikan level.
 
-Game ini dibuat dengan pendekatan **Zero Dependency & Super Ringan**:
-1. Cukup buka file [index.html](file:///d:/Latihan/simpleMathMatch/index.html) langsung dengan klik ganda (double-click) di File Explorer atau buka di browser Chrome/Edge/Firefox.
-2. Atau jika menggunakan ekstensi **Live Server** di VS Code, klik kanan `index.html` lalu pilih **Open with Live Server**.
+---
 
+## 🛠️ Langkah Menghubungkan ke Supabase
+
+### 1. Buat Project di Supabase
+1. Masuk ke [supabase.com](https://supabase.com) dan buat project baru.
+2. Buka menu **SQL Editor** di dashboard Supabase.
+3. Buka file [supabase-schema.sql](file:///d:/Latihan/simpleMathMatch/supabase-schema.sql), salin seluruh isinya, tempel ke SQL Editor Supabase, lalu klik **RUN**.
+
+### 2. Atur Kredensial di `.env.local`
+1. Buka menu **Project Settings -> API** di Supabase.
+2. Salin **Project URL** dan **Project API Keys (`anon` / `public`)**.
+3. Buka file [.env.local](file:///d:/Latihan/simpleMathMatch/.env.local) lalu isi:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
+   ```
+
+---
+
+## 🚀 Menjalankan Aplikasi
+
+Jalankan perintah berikut di terminal:
+
+```bash
+# Menjalankan server development
+npm run dev
+```
+
+Buka browser di [http://localhost:3000](http://localhost:3000).

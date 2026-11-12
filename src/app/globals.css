@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #4f46e5;
+  --bg-gradient: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #ede9fe 100%);
+}
+
+body {
+  background: var(--bg-gradient);
+  min-height: 100vh;
+  color: #1e1b4b;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Card 3D Flip */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+
+/* Wrong shake animation */
+@keyframes shakeAnimation {
+  0%, 100% { transform: rotateY(180deg) translateX(0); }
+  25% { transform: rotateY(180deg) translateX(-6px); }
+  75% { transform: rotateY(180deg) translateX(6px); }
+}
+
+.animate-shake {
+  animation: shakeAnimation 0.4s ease;
+}
+
+/* Matched disappear animation */
+@keyframes matchedDisappear {
+  0% { transform: scale(1.05); filter: brightness(1.2); }
+  50% { transform: scale(1.1); opacity: 0.9; }
+  100% { transform: scale(0.4); opacity: 0; visibility: hidden; }
+}
+
+.animate-matched {
+  animation: matchedDisappear 0.6s forwards;
+  pointer-events: none;
+}
+
