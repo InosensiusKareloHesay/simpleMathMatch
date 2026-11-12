@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MathPairs - Game Edukasi Matematika Siswa Kelas 6 SD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+    <!-- Top Navbar -->
+    <header class="top-navbar" id="topNavbar" style="display: none;">
+      <div class="logo-brand" onclick="showScreen('screenDashboard')">
+        <span>🧠 MathPairs</span>
+      </div>
+      <div class="user-pill" id="navbarUserPill" onclick="showScreen('screenProfile')" style="cursor: pointer;">
+        👤 Pemain
+      </div>
+    </header>
+
+    <!-- 1. SCREEN: LOGIN -->
+    <section class="screen" id="screenLogin">
+      <div class="glass-panel login-box">
+        <div class="login-icon">🎴✨</div>
+        <h1 style="color: var(--primary); margin-bottom: 8px;">MathPairs</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Learn · Play · Match<br>Media Pembelajaran Matematika Interaktif</p>
+        
+        <form id="formLogin">
+          <label style="display:block; text-align: left; font-weight:700; margin-top:24px; font-size:0.9rem;">Siapa namamu?</label>
+          <input type="text" id="inputPlayerName" class="input-name" placeholder="Masukkan nama panggilanmu..." required autocomplete="off" maxlength="20">
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Mulai Bermain 🚀</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 2. SCREEN: DASHBOARD -->
+    <section class="screen" id="screenDashboard">
+      <div class="welcome-hero">
+        <div class="welcome-text">
+          <span style="font-size: 0.8rem; letter-spacing: 1px; font-weight: 700; opacity: 0.85;">SELAMAT DATANG</span>
+          <h1 id="dashPlayerGreeting">Halo, <span id="dashPlayerName">Pemain</span>! 👋</h1>
+          <p>Asah daya ingat dan kecepatan berhitung matematikamu!</p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-chip">
+            <div class="val" id="dashTotalScore">0</div>
+            <div class="lbl">TOTAL SKOR</div>
+          </div>
+          <div class="stat-chip">
+            <div class="val" id="dashProgressText">0 / 10</div>
+            <div class="lbl">LEVEL SELESAI</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-grid">
+        <div class="menu-card" onclick="showScreen('screenLevelSelect')">
+          <div>
+            <div class="icon">🎮</div>
+            <h3>Mainkan Game</h3>
+            <p>Pilih level dari 1 sampai 10 dan cocokkan kartu matematika.</p>
+          </div>
+          <span style="color: var(--primary); font-weight: 700; margin-top: 16px; font-size: 0.9rem;">Mulai Tantangan →</span>
+        </div>
+
+        <div class="menu-card" onclick="showScreen('screenLeaderboard')">
+          <div>
+            <div class="icon">🏆</div>
+            <h3>Papan Peringkat</h3>
+            <p>Bandingkan total skor terbaikmu dengan teman sekelas.</p>
+          </div>
+          <span style="color: var(--primary); font-weight: 700; margin-top: 16px; font-size: 0.9rem;">Lihat Peringkat →</span>
+        </div>
+
+        <div class="menu-card" onclick="showScreen('screenProfile')">
+          <div>
+            <div class="icon">👤</div>
+            <h3>Profil Saya</h3>
+            <p>Cek riwayat skor, bintang, dan level tertinggi yang dicapai.</p>
+          </div>
+          <span style="color: var(--primary); font-weight: 700; margin-top: 16px; font-size: 0.9rem;">Detail Profil →</span>
+        </div>
+
+        <div class="menu-card" onclick="showScreen('screenHowToPlay')">
+          <div>
+            <div class="icon">📖</div>
+            <h3>Cara Bermain</h3>
+            <p>Pelajari aturan mencocokkan soal matematika & rahasia skor tinggi.</p>
+          </div>
+          <span style="color: var(--primary); font-weight: 700; margin-top: 16px; font-size: 0.9rem;">Baca Panduan →</span>
+        </div>
+      </div>
+
+      <div class="glass-panel" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h4 style="color: var(--text-main);">Level Tertinggi Saat Ini</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem;" id="dashUnlockedLvl">Level 1</p>
+        </div>
+        <button class="btn btn-primary" onclick="showScreen('screenLevelSelect')">Pilih Level</button>
+      </div>
+    </section>
+
+    <!-- 3. SCREEN: LEVEL SELECT -->
+    <section class="screen" id="screenLevelSelect">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div>
+          <h2 style="color: var(--primary);">Pilih Level</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Selesaikan level secara berurutan dari 1 sampai 10</p>
+        </div>
+        <button class="btn btn-secondary" onclick="showScreen('screenDashboard')">← Kembali</button>
+      </div>
+
+      <div class="level-grid" id="levelGridContainer">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- 4. SCREEN: GAMEPLAY -->
+    <section class="screen" id="screenGame">
+      <div class="game-hud">
+        <div class="hud-item">
+          <span class="hud-label">Tingkat</span>
+          <span class="hud-val" id="hudLevelName" style="color: var(--primary);">Level 1</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Percobaan (Move)</span>
+          <span class="hud-val" id="hudMoves">0</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Waktu</span>
+          <span class="hud-val" id="hudTimer">00:00</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">Pasangan Cocok</span>
+          <span class="hud-val" id="hudPairs" style="color: var(--success);">0 / 5</span>
+        </div>
+        <div>
+          <button class="btn btn-secondary" style="padding: 8px 14px; font-size: 0.85rem;" onclick="if(confirm('Keluar dari ronde permainan ini?')) showScreen('screenLevelSelect')">Keluar</button>
+        </div>
+      </div>
+
+      <!-- Container Board Grid Kartu -->
+      <div id="gameBoard" class="game-board board-10">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- 5. SCREEN: LEADERBOARD -->
+    <section class="screen" id="screenLeaderboard">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="color: var(--primary);">🏆 Papan Peringkat</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Peringkat dihitung dari total akumulasi skor terbaik semua level</p>
+        </div>
+        <button class="btn btn-secondary" onclick="showScreen('screenDashboard')">← Kembali</button>
+      </div>
+
+      <div class="glass-panel" style="padding: 8px;">
+        <div class="table-container">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">Peringkat</th>
+                <th>Nama Siswa</th>
+                <th>Total Skor</th>
+                <th>Total Move</th>
+                <th>Total Waktu</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. SCREEN: PROFILE -->
+    <section class="screen" id="screenProfile">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="color: var(--primary);">👤 Profil Pemain</h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">Statistik & capaian belajarmu di MathPairs</p>
+        </div>
+        <button class="btn btn-secondary" onclick="showScreen('screenDashboard')">← Kembali</button>
+      </div>
+
+      <div class="glass-panel">
+        <h3 id="profName" style="color: var(--primary); font-size: 1.5rem; margin-bottom: 12px;">Andi</h3>
+        
+        <div class="stats-breakdown" style="margin-top: 8px;">
+          <div class="breakdown-box">
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">TOTAL SKOR AKUMULASI</span>
+            <div id="profTotalScore" style="font-size: 1.6rem; font-weight: 800; color: var(--primary); margin-top: 4px;">0</div>
+          </div>
+          <div class="breakdown-box">
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">LEVEL DISELESAIKAN</span>
+            <div id="profCompleted" style="font-size: 1.6rem; font-weight: 800; color: var(--success); margin-top: 4px;">0 / 10</div>
+          </div>
+          <div class="breakdown-box">
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">LEVEL TERBUKA</span>
+            <div id="profMaxLevel" style="font-size: 1.6rem; font-weight: 800; color: #f59e0b; margin-top: 4px;">Level 1</div>
+          </div>
+          <div class="breakdown-box">
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;">STATUS AKUN</span>
+            <div style="font-size: 1.2rem; font-weight: 700; color: #64748b; margin-top: 8px;">Siswa Aktif</div>
+          </div>
+        </div>
+
+        <h4 style="margin: 24px 0 12px; color: var(--text-main);">Riwayat Skor Per Level</h4>
+        <div id="profLevelHistory">
+          <!-- Rendered by JS -->
+        </div>
+
+        <div style="margin-top: 24px; text-align: right;">
+          <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger);" onclick="resetPlayerData()">Reset Data Game</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. SCREEN: HOW TO PLAY -->
+    <section class="screen" id="screenHowToPlay">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="color: var(--primary);">📖 Cara Bermain MathPairs</h2>
+        <button class="btn btn-secondary" onclick="showScreen('screenDashboard')">← Kembali</button>
+      </div>
+
+      <div class="glass-panel" style="line-height: 1.6;">
+        <h3 style="color: var(--primary); margin-bottom: 8px;">🎯 Konsep Utama: Mencocokkan Hasil Hitungan</h3>
+        <p style="margin-bottom: 14px;">
+          Buka 2 kartu yang memiliki <strong>hasil perhitungan yang sama</strong>, meskipun rumus matematikanya berbeda!
+        </p>
+        <div style="background: #eef2ff; padding: 14px; border-radius: var(--radius-md); border-left: 4px solid var(--primary); margin-bottom: 16px;">
+          Contoh Pasangan Benar:<br>
+          • Kartu A: <strong>5 + 3</strong> (hasilnya <strong>8</strong>)<br>
+          • Kartu B: <strong>4 × 2</strong> (hasilnya <strong>8</strong>)<br>
+          👉 Karena keduanya menghasilkan <strong>8</strong>, kedua kartu tersebut adalah pasangan yang cocok!
+        </div>
+
+        <h3 style="color: var(--primary); margin: 20px 0 8px;">⚙️ Aturan Permainan</h3>
+        <ul style="padding-left: 20px; margin-bottom: 16px;">
+          <li>Klik salah satu kartu untuk membukanya, lalu klik kartu kedua.</li>
+          <li><strong>Jika Benar:</strong> Kedua kartu akan menghilang dan kamu mendapat poin kecocokan.</li>
+          <li><strong>Jika Salah:</strong> Kedua kartu akan bergoyang dan tertutup kembali. Ingat-ingat posisinya!</li>
+          <li><strong>Move:</strong> Dihitung setiap kali kamu membuka 2 kartu.</li>
+          <li><strong>Timer:</strong> Mulai menghitung secara otomatis begitu kartu pertama dibuka.</li>
+        </ul>
+
+        <h3 style="color: var(--primary); margin: 20px 0 8px;">⭐ Tips Mendapatkan Skor Tinggi</h3>
+        <p>
+          Skor dihitung berdasarkan <strong>efisiensi langkah (move)</strong> dan <strong>kecepatan waktu (timer)</strong>. Semakin sedikit move yang digunakan dan semakin cepat kamu menyelesaikan, semakin dekat skormu ke poin maksimal (hingga 3 Bintang ⭐⭐⭐)!
+        </p>
+
+        <div style="margin-top: 24px; text-align: center;">
+          <button class="btn btn-primary" onclick="showScreen('screenLevelSelect')">Mengerti, Ayo Main! 🚀</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODAL: HASIL PERMAINAN -->
+    <div class="modal-overlay" id="modalResult">
+      <div class="modal-content">
+        <h2 id="resTitle" style="color: var(--primary);">Level Selesai! 🎉</h2>
+        <div class="stars-celebrate" id="resStars">⭐⭐⭐</div>
+        
+        <div>
+          <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">SKOR KAMU:</span>
+          <div class="result-badge" id="resScore">950 PTS</div>
+        </div>
+
+        <div id="resUnlockMsg" style="color: #10b981; font-weight: 700; margin-bottom: 14px; font-size: 1.1rem; display: none;">
+          🎉 Level Baru Terbuka!
+        </div>
+
+        <div class="stats-breakdown">
+          <div class="breakdown-box">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">TOTAL MOVE</span>
+            <div id="resMoves" style="font-size: 1.3rem; font-weight: 800; color: var(--text-main);">8</div>
+          </div>
+          <div class="breakdown-box">
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">WAKTU</span>
+            <div id="resTime" style="font-size: 1.3rem; font-weight: 800; color: var(--text-main);">00:45</div>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Skor Terbaik di Level Ini: <strong id="resBestScore" style="color: var(--primary);">950</strong> Pts
+        </p>
+
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button class="btn btn-secondary" onclick="document.getElementById('modalResult').classList.remove('active'); showScreen('screenDashboard');">Dashboard</button>
+          <button class="btn btn-primary" id="btnNextLevel">Level Selanjutnya →</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,634 @@
+MathPairs
+Learn · Play · Match
+Web-Based Educational Game
+Media pembelajaran matematika interaktif untuk siswa kelas 6 SD.
+
+1. Deskripsi umum
+MathPairs adalah permainan edukasi berbasis web yang menggabungkan konsep Memory Card Game dengan latihan kemampuan berhitung matematika.
+
+Dalam permainan ini, pemain diharuskan menemukan dua kartu yang memiliki hasil perhitungan sama, meskipun soal matematika pada kedua kartu berbeda.
+
+Contohnya:
+- Kartu pertama: 5 + 3 menghasilkan 8.
+- Kartu kedua: 4 × 2 menghasilkan 8.
+Kedua kartu tersebut merupakan pasangan yang benar dan akan menghilang dari papan permainan.
+
+Pemain harus menyelesaikan seluruh pasangan kartu pada setiap level dengan jumlah langkah (move) dan waktu (timer) sesedikit mungkin untuk memperoleh skor terbaik.
+
+Game memiliki 10 level dengan tingkat kesulitan bertahap, mulai dari 10 kartu hingga 100 kartu.
+
+Selain permainan individu, MathPairs juga menyediakan sistem akun pemain, penyimpanan progres, perolehan poin, serta leaderboard untuk membandingkan pencapaian antarpemain.
+
+Tujuan utama: Membantu siswa melatih kemampuan berhitung, daya ingat, konsentrasi, ketelitian, dan kecepatan berpikir melalui permainan yang menyenangkan.
+
+2. Tujuan pembelajaran
+MathPairs dirancang untuk membantu siswa:
+1. Melatih kemampuan operasi penjumlahan.
+2. Melatih kemampuan operasi pengurangan.
+3. Melatih kemampuan operasi perkalian.
+4. Melatih kemampuan operasi pembagian.
+5. Meningkatkan daya ingat melalui posisi kartu.
+6. Meningkatkan konsentrasi dan ketelitian.
+7. Melatih kemampuan berpikir cepat dalam menyelesaikan masalah.
+8. Membangun semangat kompetisi yang positif melalui leaderboard.
+3. Target pengguna dan platform
+Keterangan	Deskripsi
+Target pengguna	Siswa kelas 6 SD
+Pengguna pendamping	Guru
+Platform	Website
+Perangkat	Laptop, PC, tablet, HP
+Browser	Chrome, Edge, Firefox, Safari
+Koneksi	Internet
+Instalasi	Tidak diperlukan
+Orientasi	Responsive
+
+Game dapat diakses melalui URL website sehingga guru cukup membagikan alamat website kepada siswa.
+
+4. Mekanisme permainan (Gameplay)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+10
+
+
+
+
+
+
+
+
+
+
+
+Mekanisme permainan utama adalah mencocokkan dua kartu berdasarkan hasil perhitungan matematika.
+Alur permainan
+1. Pemain masuk ke website MathPairs.
+2. Pemain memasukkan nama untuk memulai permainan.
+3. Sistem menampilkan dashboard.
+4. Pemain memilih level yang sudah terbuka.
+5. Sistem menampilkan sejumlah kartu dalam posisi tertutup.
+6. Pemain membuka kartu pertama.
+7. Pemain membuka kartu kedua.
+8. Sistem menghitung dan membandingkan hasil kedua soal.
+9. Jika hasilnya sama, kedua kartu menghilang.
+10. Jika hasilnya berbeda, kedua kartu kembali tertutup.
+11. Permainan berlanjut hingga seluruh pasangan ditemukan.
+12. Sistem menghitung skor berdasarkan jumlah move dan timer.
+13. Hasil permainan disimpan dan ditampilkan kepada pemain.
+Contoh permainan
+Misalnya Level 1 memiliki 10 kartu:
+Level 1
+10 Cards
+
+5 + 3
+
+
+9 ÷ 3
+
+
+1 × 5
+
+
+10 − 5
+
+
+4 × 2
+
+
+1 × 3
+
+
+7 − 4
+
+
+2 × 4
+
+
+6 + 2
+
+
+12 ÷ 4
+
+
+
+Pasangan yang harus ditemukan:
+5 + 3 dan 2 × 4
+8
+
+9 ÷ 3 dan 1 × 3
+3
+
+1 × 5 dan 10 − 5
+5
+
+7 − 4 dan 12 ÷ 4
+3
+
+4 × 2 dan 6 + 2
+8
+
+
+Catatan: Contoh kartu di atas perlu disesuaikan agar setiap soal hanya memiliki tepat satu pasangan. Untuk set kartu final, gunakan hasil yang unik per pasangan.
+
+5. Sistem level (Level 1–10)
+MathPairs memiliki 10 level dengan jumlah kartu yang meningkat secara bertahap.
+
+Setiap level memiliki jumlah kartu genap agar seluruh kartu dapat dipasangkan.
+Level	Jumlah kartu	Jumlah pasangan
+1	10	5
+2	20	10
+3	30	15
+4	40	20
+5	50	25
+6	60	30
+7	70	35
+8	80	40
+9	90	45
+10	100	50
+
+Pembagian tingkat kesulitan
+Level	Materi matematika
+1	Penjumlahan dan pengurangan sederhana
+2	Penjumlahan dan pengurangan
+3	Penjumlahan, pengurangan, perkalian
+4	Penjumlahan, pengurangan, perkalian
+5	Empat operasi dasar
+6	Empat operasi dengan angka lebih bervariasi
+7	Kombinasi operasi dengan angka lebih besar
+8	Kombinasi operasi dengan tingkat kesulitan menengah
+9	Kombinasi operasi dengan tingkat kesulitan tinggi
+10	Tantangan kombinasi seluruh operasi
+
+Semua soal harus menghasilkan pasangan yang valid, dengan tingkat kesulitan disesuaikan berdasarkan level.
+Sistem pembukaan level
+Level Selection
+1
+
+
+2
+
+
+3
+
+
+4
+
+
+5
+
+
+6
+
+
+7
+
+
+8
+
+
+9
+
+
+10
+
+
+
+Ilustrasi: Level 1–3 selesai, Level 4 terbuka, Level 5–10 terkunci.
+Ketentuannya:
+- Level 1 terbuka secara otomatis.
+- Level 2 terbuka setelah Level 1 selesai.
+- Level 3 terbuka setelah Level 2 selesai.
+- Begitu seterusnya sampai Level 10.
+- Pemain dapat mengulang level yang sudah terbuka.
+- Skor terbaik pada level tersebut tetap tersimpan.
+
+6. Sistem Move dan Timer
+Dua indikator utama dalam permainan adalah Move dan Timer.
+
+Move
+
+Move adalah jumlah percobaan membuka dua kartu untuk menemukan satu pasangan.
+
+Contoh:
+- Membuka dua kartu yang salah = 1 move.
+- Membuka dua kartu yang benar = 1 move.
+- Membuka satu kartu saja belum dihitung sebagai move.
+Timer
+
+Timer menghitung waktu sejak pemain membuka kartu pertama sampai seluruh pasangan ditemukan.
+
+Contoh:
+Level 1
+In Progress
+
+12
+Move
+
+01:25
+Timer
+
+3/5
+Pairs
+
+
+
+Semakin kecil jumlah move dan semakin singkat waktu penyelesaian, semakin baik hasil pemain.
+
+7. Sistem poin (Scoring System)
+MathPairs menggunakan sistem skor berdasarkan efisiensi penyelesaian level.
+
+Setiap level mempunyai skor tersendiri. Skor dari seluruh level kemudian diakumulasikan menjadi total poin pemain.
+Parameter penilaian
+- Jumlah move yang digunakan.
+- Waktu penyelesaian.
+- Jumlah pasangan kartu.
+- Level yang sedang dimainkan.
+Rekomendasi formula skor
+Agar sistem konsisten, gunakan konsep berikut:
+\[
+\text{Skor Level} = \text{Skor Dasar} \times \text{Efisiensi}
+\]
+
+Efisiensi dapat dihitung dari perbandingan jumlah move minimum dengan move aktual, serta waktu target dengan waktu aktual.
+
+Sebagai contoh, gunakan bobot 60% untuk move dan 40% untuk waktu:
+\[
+E = 0.6 \times \frac{M_{min}}{M}
++ 0.4 \times \frac{T_{target}}{T}
+\]
+
+Keterangan:
+- \(M_{min}\): jumlah move minimum yang mungkin.
+- \(M\): jumlah move aktual.
+- \(T_{target}\): waktu target.
+- \(T\): waktu aktual.
+Skor perlu dibatasi agar tidak melebihi skor dasar level.
+Contoh hasil permainan
+Pemain	Move	Waktu	Skor
+Andi	8	00:45	950
+Budi	10	00:50	850
+Citra	12	01:10	720
+
+Angka skor di atas hanya ilustrasi.
+Aturan penyimpanan skor
+Ini penting:
+1. Setiap level menyimpan skor terbaik pemain.
+2. Jika pemain mengulang level dan memperoleh skor lebih tinggi, skor lama digantikan.
+3. Jika skor baru lebih rendah, skor terbaik sebelumnya tetap digunakan.
+4. Total poin merupakan akumulasi skor terbaik seluruh level.
+5. Total poin menjadi dasar leaderboard.
+Dengan demikian, pemain harus meningkatkan kemampuan dan efisiensinya, bukan sekadar mengulang permainan untuk mengumpulkan poin.
+
+8. Login dan identitas pemain
+MathPairs menggunakan sistem login sederhana tanpa email dan password.
+
+Pemain cukup memasukkan nama untuk mulai bermain.
+MathPairs
+Welcome to MathPairs!
+
+
+
+
+
+
+
+
+
+
+
+Siapa namamu?
+Masukkan nama pemain...
+
+Mulai Bermain
+
+Ilustrasi halaman login.
+Ketentuan login
+- Nama pemain wajib diisi.
+- Nama pemain digunakan sebagai identitas tampilan.
+- Sistem membuat ID unik untuk setiap pemain.
+- Progres dan skor disimpan berdasarkan ID pemain.
+- Pemain dapat melanjutkan progresnya ketika kembali menggunakan identitas yang sama.
+Catatan penting: Login nama saja bukan autentikasi yang aman. Untuk MVP, identitas dapat disimpan menggunakan ID pemain dan kode pemulihan sederhana agar progres bisa dilanjutkan di perangkat berbeda. Hindari menjadikan nama saja sebagai bukti kepemilikan akun.
+
+9. Menu aplikasi
+MathPairs menggunakan navigasi sederhana agar siswa mudah memahami setiap fitur.
+MathPairs
+Dashboard
+
+WELCOME BACK
+Halo, Andi! 👋
+Siap mengasah kemampuan matematikamu?
+Progress level
+
+3 / 10
+
+
+
+
+Play Game
+Mulai permainan dan pilih level.
+
+Leaderboard
+Lihat peringkat pemain.
+
+My Profile
+Lihat data dan pencapaian.
+
+How to Play
+Pelajari aturan permainan.
+
+
+
+Konsep visual dashboard.A. Dashboard
+Menampilkan:
+- Nama pemain.
+- Total poin.
+- Level tertinggi yang terbuka.
+- Jumlah level yang sudah diselesaikan.
+- Tombol mulai bermain.
+- Ringkasan peringkat leaderboard.
+B. Play Game
+Menampilkan daftar Level 1–10.
+
+Setiap level menampilkan:
+- Nomor level.
+- Jumlah kartu.
+- Status terkunci atau terbuka.
+- Status selesai.
+- Skor terbaik.
+- Tombol mulai atau ulangi permainan.
+C. Leaderboard
+Menampilkan peringkat seluruh pemain berdasarkan total akumulasi skor terbaik dari semua level.
+D. My Profile
+Menampilkan:
+- Nama pemain.
+- Total poin.
+- Level tertinggi.
+- Total level selesai.
+- Riwayat hasil setiap level.
+- Skor terbaik setiap level.
+E. How to Play
+Menjelaskan:
+- Cara membuka kartu.
+- Cara mencocokkan kartu.
+- Sistem Move.
+- Sistem Timer.
+- Sistem poin.
+- Aturan pembukaan level.
+
+10. Leaderboard
+
+
+
+
+
+
+
+
+ellinopoula.com
+
+
+Leaderboard merupakan fitur kompetisi yang menampilkan pemain dengan total skor tertinggi.
+
+Contoh:
+Leaderboard
+Top Players
+🥇
+Nadia Putri
+
+8.500
+pts
+🥈
+Andi Pratama
+
+7.800
+pts
+🥉
+Budi Santoso
+
+7.200
+pts
+4
+Citra Amelia
+
+6.500
+pts
+5
+Doni Saputra
+
+5.900
+pts
+
+Aturan peringkat
+Urutan penilaian:
+1. Total akumulasi skor terbaik tertinggi.
+2. Jika total skor sama, jumlah total move lebih sedikit.
+3. Jika masih sama, total waktu penyelesaian lebih cepat.
+4. Jika masih sama, waktu pencapaian skor tersebut lebih dahulu.
+
+11. Halaman hasil permainan
+Setelah pemain menyelesaikan satu level, sistem menampilkan hasil permainan.
+Level Completed!
+Selamat, kamu berhasil menyelesaikan Level 1.
+
+TOTAL SCORE950 PTS
+
+8
+Total Move
+
+00:45
+Completion Time
+
+
+Level 2 Unlocked!
+
+Kembali ke Dashboard
+
+Ilustrasi halaman hasil permainan.
+Informasi yang ditampilkan:
+- Status penyelesaian.
+- Skor yang diperoleh.
+- Jumlah move.
+- Waktu penyelesaian.
+- Skor terbaik sebelumnya.
+- Pemberitahuan level berikutnya terbuka.
+- Tombol bermain level berikutnya.
+- Tombol kembali ke dashboard.
+Jika pemain mengulang level dan memperoleh skor lebih rendah, sistem tetap mempertahankan skor terbaik sebelumnya.
+
+12. Aturan teknis permainan
+Berikut aturan yang perlu diterapkan ketika game dibangun:
+Komponen	Aturan
+Kartu	Semua kartu dimulai dalam kondisi tertutup
+Pemilihan	Maksimal dua kartu terbuka dalam satu waktu
+Kecocokan	Berdasarkan hasil matematika
+Jawaban benar	Kedua kartu menghilang
+Jawaban salah	Kedua kartu tertutup kembali
+Move	Bertambah setiap dua kartu dibuka
+Timer	Berjalan sejak kartu pertama dibuka
+Randomisasi	Posisi kartu diacak setiap permainan baru
+Penyelesaian	Semua pasangan berhasil ditemukan
+Level	Terbuka secara bertahap
+Skor	Disimpan berdasarkan skor terbaik per level
+
+Ketentuan tambahan
+- Tidak boleh ada dua kartu yang memiliki hasil ambigu atau lebih dari satu pasangan.
+- Sistem harus memastikan seluruh kartu memiliki tepat satu pasangan.
+- Timer berhenti ketika permainan selesai.
+- Pemain tidak dapat membuka kartu ketiga sebelum dua kartu sebelumnya selesai diperiksa.
+- Refresh halaman ketika permainan berlangsung sebaiknya tidak memberikan keuntungan skor atau menghapus percobaan. Untuk MVP, permainan yang belum selesai dapat dianggap gagal dan harus dimulai ulang.
+- Validasi skor dilakukan di sisi server agar leaderboard tidak mudah dimanipulasi.
+
+13. Teknologi pengembangan website
+Aku merekomendasikan stack berikut untuk membangun MathPairs:
+
+
+
+
+
+
+
+
+
+
+Next.js + React
+
+Frontend dan routing aplikasi web.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Tailwind CSS
+
+Desain UI dan responsive layout.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Supabase
+
+Database dan penyimpanan progres pemain.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Vercel / Netlify
+
+Hosting dan deployment website.
+
+
+
+Rancangan data database
+Minimal terdapat beberapa tabel:
+Tabel	Fungsi
+players	Identitas dan nama pemain
+levels	Konfigurasi setiap level
+game_sessions	Catatan setiap permainan
+player_level_scores	Skor terbaik pemain per level
+leaderboard	Data peringkat berdasarkan agregasi skor
+
+Leaderboard sebaiknya dihitung dari data skor terbaik per level, bukan menyimpan total poin secara terpisah tanpa validasi.
+
+14. Batasan MVP (Minimum Viable Product)
+Agar proses pembangunan tidak terlalu rumit, versi pertama MathPairs cukup memiliki fitur berikut.
+Prioritas pengembangan
+Wajib tersedia
+Checklist spesifikasi MVP0/13
+
+
+[ ] Login dengan nama pemain
+[ ] Dashboard utama
+[ ] Pemilihan Level 1–10
+[ ] Sistem kartu dan pencocokan matematika
+[ ] Randomisasi kartu
+[ ] Timer dan Move Counter
+[ ] Sistem perhitungan skor
+[ ] Penyimpanan skor terbaik per level
+[ ] Sistem unlock level
+[ ] Leaderboard global
+[ ] Halaman profil pemain
+[ ] Halaman hasil permainan
+[ ] Responsive untuk HP dan laptop
+
+Fitur yang belum perlu dibuat:
+- Multiplayer.
+- Chat antarpemain.
+- AI tutor.
+- Avatar dan kostumisasi karakter.
+- Achievement kompleks.
+- Sistem turnamen.
+- Panel administrasi yang kompleks.
+
+15. Ringkasan akhir MathPairs
+MathPairs
+Educational Math Memory Game
+Spesifikasi	Ketentuan
+Platform	Web
+Target	Kelas 6 SD
+Login	Nama pemain
+Level	1–10
+Kartu	10–100
+Materi	+, −, ×, ÷
+Gameplay	Matching hasil matematika
+Move	Jumlah percobaan pasangan
+Timer	Waktu penyelesaian
+Skor	Efisiensi move dan timer
+Akumulasi	Skor terbaik tiap level
+Unlock	Bertahap
+Leaderboard	Global
+Database	Supabase
+Framework	Next.js
+Hosting	Vercel / Netlify
+
+
+Kesimpulan konsep:
+
+MathPairs bukan sekadar permainan mencocokkan kartu, tetapi media pembelajaran matematika yang mendorong siswa untuk berpikir cepat, mengingat posisi kartu, menghitung dengan tepat, serta berkompetisi secara sehat melalui sistem leaderboard.
+
+Rekomendasi tahap berikutnya: Sebelum mulai coding, ada satu hal yang perlu ditetapkan, yaitu formula skor final. Ini penting karena jumlah kartu Level 1 dan Level 10 berbeda jauh, sehingga skor perlu dinormalisasi agar leaderboard tetap adil dan pemain tidak otomatis lebih unggul hanya karena memainkan level yang lebih tinggi.
